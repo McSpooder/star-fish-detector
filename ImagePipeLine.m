@@ -16,11 +16,11 @@ function ImagePipeLine(name)
     imshow(out)
     title('Enhanced Image')
     
-    disp("Extracting Features...")
+    disp("Getting Binary Mask...")
     subplot(2,2,3)
-    ExtractFeatures(img);
+    out = GetBinaryMask(out);
     imshow(out)
-    title('Extracted Features')
+    title('Binary Mask')
     
     %%% Image Analysis %%%
     subplot(2,2,4)
@@ -53,10 +53,37 @@ function out = MeanBlur(img)
     G=img(:, :, 2);
     B=img(:, :, 3);
     
-    out_r = uint8(conv2(double(R), filter, "same"));
-    out_g = uint8(conv2(double(G), filter, "same"));
-    out_b = uint8(conv2(double(B), filter, "same"));
+    out_r = uint8(conv2(double(R), filter, "valid"));
+    out_g = uint8(conv2(double(G), filter, "valid"));
+    out_b = uint8(conv2(double(B), filter, "valid"));
     
     out = cat(3, out_r, out_g, out_b);
     
+end
+
+function out = GetBinaryMask(img)
+
+    disp("--Extracting the Initial Mask...")
+    img = rgb2gray(img);
+    bmask = ~imbinarize(img);
+
+    %imfill
+    disp("--Filling in the Holes...")
+    CONN = [ 0 1 0; 1 1 1; 0 1 0 ];
+    closed = imfill(bmask, CONN, 'holes');
+
+    %hitmiss
+    disp("--Getting Isolated Points...")
+    interval = [-1,0,-1; 0,1,0; -1,0,-1];
+    morphed = bwhitmiss(closed, interval);
+
+    %subtract
+    disp("--Subtracting Isolated Points...")
+    out = bmask - morphed;
+    
+end
+
+function out = ApplyMorphology(img)
+    
+
 end
