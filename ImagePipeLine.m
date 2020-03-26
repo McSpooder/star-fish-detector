@@ -15,6 +15,19 @@ function ImagePipeLine(name)
     title("Initial Image")
     
     %%% Image Processing %%%
+    out = ImageProcessing(img);
+    
+    %%% Image Analysis %%%      
+    ImageAnalysis(out)
+    
+    x = (5);
+    fprintf("There are %6.2f starfish. \n",x);
+    
+end
+
+
+function out = ImageProcessing(img)
+
     disp("Enhancing Image...")
     out = Enhancement(img);
     subplot(3,3,2)
@@ -27,10 +40,13 @@ function ImagePipeLine(name)
     imshow(out)
     title('Binary Mask')
     
-    
-    %%% Image Analysis %%%      
+end
+
+
+function out = ImageAnalysis(mask)
+
     disp("Applying Morphology...")
-    out = ApplyMorphology(out,2);
+    out = ApplyMorphology(mask,2);
     subplot(3,3,4)
     imshow(out)
     title("Post Morphology")
@@ -47,9 +63,6 @@ function ImagePipeLine(name)
     regp = FilterRegionProps(labels);
     subplot(3,3,6)
     DisplayCentroids(regp, out);
-    
-    x = (5);
-    fprintf("There are %6.2f starfish. \n",x);
     
 end
 
@@ -69,7 +82,7 @@ function out = MeanBlur(img)
 
     filter = ones(3)/9;
     
-    [Height, Width, Chans] = size(img);
+    [~, ~, Chans] = size(img);
     if Chans == 3
         R=img(:, :, 1);
         G=img(:, :, 2);
@@ -92,7 +105,7 @@ end
 function out = GetBinaryMask(img)
 
     disp("--Extracting the Initial Mask...")
-    [Height, Width, Chans] = size(img);
+    [~, ~, Chans] = size(img);
     if Chans == 3
        img = rgb2gray(img);
     end
@@ -190,7 +203,7 @@ end
 function regp = FilterRegionProps(labels)
 
     regp = regionprops(labels, "centroid","ConvexArea","solidity");
-    convexArea = cat(1, regp.ConvexArea)
+    convexArea = cat(1, regp.ConvexArea);
 
     deleted = 0;
     for n = 1:length(convexArea)
