@@ -36,11 +36,17 @@ function ImagePipeLine(name)
     title("Post Morphology")
     
     disp("Applying Watershed")
-    out = WatershedSegment(out, 1);
+    labels = WatershedSegment(out, 1);
     figure(1)
+    col_seg = label2rgb(labels,'jet',[.5 .5 .5]);
     subplot(3,3,5)
-    imshow(out)
+    imshow(col_seg)
     title("Watershed Segmentation")
+    
+    disp("Getting Shape Descriptors")
+    regp = FilterRegionProps(labels);
+    subplot(3,3,6)
+    DisplayCentroids(regp, out);
     
     x = (5);
     fprintf("There are %6.2f starfish. \n",x);
@@ -56,13 +62,6 @@ function out = Enhancement(img)
     %out = histeq(out);
     out = adapthisteq(out);
 
-end
-
-
-function out = ExtractFeatures(img)
-
-    disp("Features have been extracted.")
-    
 end
 
 
@@ -167,27 +166,51 @@ function out = WatershedSegment(mask, display)
     seg_mask(L == 0) = 0;
 
     L(~mask) = 0;
-    out = label2rgb(L,'jet',[.5 .5 .5]);
-
+    out = L;
 
     if display == 1
         figure (2)
-        subplot(3,3,1)
+        subplot(2,2,1)
         imshow(D,[])
         title('Distance Transform of Binary Image')
-        subplot(3,3,2)
+        subplot(2,2,2)
         imshow(D_comp,[])
         title('Complement of Distance Transform')
-        subplot(3,3,3)
+        subplot(2,2,3)
         imshowpair(mask,ext_mask,'blend')
         title("Minimum extended overlayed")
-        subplot(3,3,4)
+        subplot(2,2,4)
         imshow(seg_mask)
         title('Original Mask Segmented')        
-        subplot(3,3,5)
-        imshow(out)
-        title("Watershed Transform")
     end
 
+end
+
+
+function regp = FilterRegionProps(labels)
+
+    regp = regionprops(labels, "centroid","ConvexArea","solidity");
+    convexArea = cat(1, regp.ConvexArea)
+
+    deleted = 0;
+    for n = 1:length(convexArea)
+        if convexArea(n) < 2000
+            %delete the record from s
+            regp(n-deleted) = [];
+            deleted = deleted + 1;
+        end
+    end
+
+end
+
+
+function  DisplayCentroids(regprops, mask)
+    
+    centroids = cat(1, regprops.Centroid); 
+    imshow(mask)
+    hold on
+    plot(centroids(:,1), centroids(:,2),'b*')
+    hold off
+    
 end
 

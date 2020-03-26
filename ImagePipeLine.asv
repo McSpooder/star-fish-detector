@@ -36,10 +36,11 @@ function ImagePipeLine(name)
     title("Post Morphology")
     
     disp("Applying Watershed")
-    out = WatershedSegment(out, 1);
+    labels = WatershedSegment(out, 1);
     figure(1)
+    col_seg = label2rgb(labels,'jet',[.5 .5 .5]);
     subplot(3,3,5)
-    imshow(out)
+    imshow(col_seg)
     title("Watershed Segmentation")
     
     x = (5);
@@ -158,7 +159,7 @@ function out = WatershedSegment(mask, display)
     D_comp = -D;
     
     disp("Applying minimum extend")
-    ext_mask = imextendedmin(D_comp,2);
+    ext_mask = imextendedmin(D_comp,1.5);%was 2
     D2 = imimposemin(D_comp,ext_mask);
     
     disp("Applying Watershed Transform")
@@ -167,8 +168,7 @@ function out = WatershedSegment(mask, display)
     seg_mask(L == 0) = 0;
 
     L(~mask) = 0;
-    out = label2rgb(L,'jet',[.5 .5 .5]);
-
+    out = L;
 
     if display == 1
         figure (2)
@@ -179,18 +179,45 @@ function out = WatershedSegment(mask, display)
         imshow(D_comp,[])
         title('Complement of Distance Transform')
         subplot(2,2,3)
-        imshow(rgb)
-        title('Watershed Transform')
-        
         imshowpair(mask,ext_mask,'blend')
-        
-        imshow(rgb)
-        title("rgb labels")
-        
-        subplot(2,2,2)
+        title("Minimum extended overlayed")
+        subplot(2,2,4)
         imshow(seg_mask)
-        title("original binary segmented")
+        title('Original Mask Segmented')        
     end
 
+end
+
+function DetectStarfish(mask, labels)
+
+    regp = FilterRegionProps(labels);
+    DisplayCentroids(regp, mask);
+    
+end
+
+function regp = FilterRegionProps(labels)
+
+    regp = regionprops(labels, "centroid","ConvexArea","solidity");
+
+    deleted = 0;
+    for n = 1:length(convexArea)
+        if convexArea(n) < 2000
+            %delete the record from s
+            regp(n-deleted) = [];
+            deleted = deleted + 1;
+        end
+    end
+
+end
+
+
+function  DisplayCentroids(regprops, mask)
+    
+    centroids = cat(1, regprops.Centroid); 
+    imshow(mask)
+    hold on
+    plot(centroids(:,1), centroids(:,2),'b*')
+    hold off
+    
 end
 
