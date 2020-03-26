@@ -4,13 +4,13 @@ function ImagePipeLine(name)
     fprintf("\n")
     
     figure(1)
-    subplot(3,3,1)
+    subplot(4,3,1)
     sgtitle("Image Pipe Line")
     
     %loading in the image
     img = imread(name);
     img = img(:,:,3);
-    subplot(3,3,1)
+    subplot(4,3,1)
     imshow(img)
     title("Initial Image")
     
@@ -30,13 +30,13 @@ function out = ImageProcessing(img)
 
     disp("Enhancing Image...")
     out = Enhancement(img);
-    subplot(3,3,2)
+    subplot(4,3,2)
     imshow(out)
     title('Enhanced Image')
     
     disp("Getting Binary Mask...")
     out = GetBinaryMask(out);
-    subplot(3,3,3)
+    subplot(4,3,3)
     imshow(out)
     title('Binary Mask')
     
@@ -47,7 +47,7 @@ function out = ImageAnalysis(mask)
 
     disp("Applying Morphology...")
     out = ApplyMorphology(mask,2);
-    subplot(3,3,4)
+    subplot(4,3,4)
     imshow(out)
     title("Post Morphology")
     
@@ -55,14 +55,16 @@ function out = ImageAnalysis(mask)
     labels = WatershedSegment(out, 1);
     figure(1)
     col_seg = label2rgb(labels,'jet',[.5 .5 .5]);
-    subplot(3,3,5)
+    subplot(4,3,5)
     imshow(col_seg)
     title("Watershed Segmentation")
     
     disp("Getting Shape Descriptors")
     regp = FilterRegionProps(labels);
-    subplot(3,3,6)
+    
+    subplot(4,3,[7,8,9,10])
     DisplayCentroids(regp, out);
+    DisplayBounding(regp)
     
 end
 
@@ -202,7 +204,7 @@ end
 
 function regp = FilterRegionProps(labels)
 
-    regp = regionprops(labels, "centroid","ConvexArea","solidity");
+    regp = regionprops(labels, "centroid", "ConvexArea", "BoundingBox", "solidity");
     convexArea = cat(1, regp.ConvexArea);
 
     deleted = 0;
@@ -224,6 +226,17 @@ function  DisplayCentroids(regprops, mask)
     hold on
     plot(centroids(:,1), centroids(:,2),'b*')
     hold off
+    
+end
+
+
+function DisplayBounding(regprops)
+
+    bb = cat(1, regprops.BoundingBox);
+    for i = 1:length(bb)
+        disp(i)
+        rectangle("Position",[bb(i,1) bb(i,2) bb(i,3) bb(i,4)],'EdgeColor','green');
+    end
     
 end
 

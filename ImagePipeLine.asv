@@ -82,7 +82,7 @@ function out = MeanBlur(img)
 
     filter = ones(3)/9;
     
-    [Height, Width, Chans] = size(img);
+    [~, ~, Chans] = size(img);
     if Chans == 3
         R=img(:, :, 1);
         G=img(:, :, 2);
@@ -105,7 +105,7 @@ end
 function out = GetBinaryMask(img)
 
     disp("--Extracting the Initial Mask...")
-    [Height, Width, Chans] = size(img);
+    [~, ~, Chans] = size(img);
     if Chans == 3
        img = rgb2gray(img);
     end
@@ -203,7 +203,7 @@ end
 function regp = FilterRegionProps(labels)
 
     regp = regionprops(labels, "centroid","ConvexArea","solidity");
-    convexArea = cat(1, regp.ConvexArea)
+    convexArea = cat(1, regp.ConvexArea);
 
     deleted = 0;
     for n = 1:length(convexArea)
@@ -225,5 +225,15 @@ function  DisplayCentroids(regprops, mask)
     plot(centroids(:,1), centroids(:,2),'b*')
     hold off
     
+end
+
+
+function DisplayBounding(regprops, mask)
+
+    bob
+    for i = 1:length(bb)
+        disp(i)
+        rectangle("Position",[bb(i,1) bb(i,2) bb(i,3) bb(i,4)],'EdgeColor','green');
+    end
 end
 
