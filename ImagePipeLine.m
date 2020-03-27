@@ -247,7 +247,7 @@ end
 function DisplayBounding(regprops)
 
     bb = cat(1, regprops.BoundingBox);
-    for i = 1:length(bb)
+    for i = 1:size(bb)
         rectangle("Position",[bb(i,1) bb(i,2) bb(i,3) bb(i,4)],'EdgeColor','green');
     end
     
