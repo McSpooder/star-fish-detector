@@ -72,15 +72,17 @@ end
 function out = Enhancement(img)
 
     disp("--Applying Blur...")
-    out = MeanBlur(img);
+    out = MeanBlur(img, "valid");
+    out = UnsharpMask(out);
+    out = UnsharpMask(out);
     disp("--Applying equalization...")
     %out = histeq(out);
-    out = adapthisteq(out);
+    %out = adapthisteq(out);
 
 end
 
 
-function out = MeanBlur(img)
+function out = MeanBlur(img, method)
 
     filter = ones(3)/9;
     
@@ -90,17 +92,26 @@ function out = MeanBlur(img)
         G=img(:, :, 2);
         B=img(:, :, 3);
 
-        out_r = uint8(conv2(double(R), filter, "valid"));
-        out_g = uint8(conv2(double(G), filter, "valid"));
-        out_b = uint8(conv2(double(B), filter, "valid"));
+        out_r = uint8(conv2(double(R), filter, method));
+        out_g = uint8(conv2(double(G), filter, method));
+        out_b = uint8(conv2(double(B), filter, method));
 
         out = cat(3, out_r, out_g, out_b);       
     end
     
     if Chans == 1
-        out = uint8(conv2(double(img), filter, "valid"));
+        out = uint8(conv2(double(img), filter, method));
     end
     
+end
+
+
+function out = UnsharpMask(img)
+
+    blured = MeanBlur(img, "same");
+    edges = img - blured;
+    out = img + edges;
+
 end
 
 
