@@ -18,7 +18,7 @@ function ImagePipeLine(name)
     out = ImageProcessing(img);
     
     %%% Image Analysis %%%      
-    ImageAnalysis(out)
+    ImageAnalysis(out);
     
     x = (5);
     fprintf("There are %6.2f starfish. \n",x);
@@ -204,13 +204,17 @@ end
 
 function regp = FilterRegionProps(labels)
 
-    regp = regionprops(labels, "centroid", "ConvexArea", "BoundingBox", "solidity");
+    regp = regionprops(labels, "centroid", "ConvexArea", "BoundingBox", "Solidity");
     convexArea = cat(1, regp.ConvexArea);
+    solidity = cat(1, regp.Solidity);
 
     deleted = 0;
     for n = 1:length(convexArea)
         if convexArea(n) < 2000
             %delete the record from s
+            regp(n-deleted) = [];
+            deleted = deleted + 1;
+        elseif solidity(n) > 0.6
             regp(n-deleted) = [];
             deleted = deleted + 1;
         end
@@ -234,7 +238,6 @@ function DisplayBounding(regprops)
 
     bb = cat(1, regprops.BoundingBox);
     for i = 1:length(bb)
-        disp(i)
         rectangle("Position",[bb(i,1) bb(i,2) bb(i,3) bb(i,4)],'EdgeColor','green');
     end
     
