@@ -73,6 +73,7 @@ function out = Enhancement(img)
 
     disp("--Applying Blur...")
     out = MeanBlur(img, "valid");
+    %out = medfilt2(img, [3 3]);
     out = UnsharpMask(out);
     out = UnsharpMask(out);
     disp("--Applying equalization...")
