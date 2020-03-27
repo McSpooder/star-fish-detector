@@ -76,9 +76,8 @@ function out = Enhancement(img)
     out = UnsharpMask(out);
     out = UnsharpMask(out);
     disp("--Applying equalization...")
-    %out = histeq(out);
-    %out = adapthisteq(out);
 
+    
 end
 
 
@@ -183,7 +182,7 @@ function out = WatershedSegment(mask, display)
     D_comp = -D;
     
     disp("Applying minimum extend")
-    ext_mask = imextendedmin(D_comp,1.5);%was 2
+    ext_mask = imextendedmin(D_comp,1);%was 2
     D2 = imimposemin(D_comp,ext_mask);
     
     disp("Applying Watershed Transform")
@@ -221,7 +220,7 @@ function regp = FilterRegionProps(labels)
 
     deleted = 0;
     for n = 1:length(convexArea)
-        if convexArea(n) < 2000
+        if convexArea(n) < 1500
             %delete the record from s
             regp(n-deleted) = [];
             deleted = deleted + 1;
