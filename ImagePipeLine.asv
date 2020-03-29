@@ -29,7 +29,7 @@ end
 function out = ImageProcessing(img)
 
     disp("Enhancing Image...")
-    out = Enhancement3(img);
+    out = Enhancement4(img);
     subplot(4,3,2)
     imshow(out)
     title('Enhanced Image')
@@ -115,7 +115,14 @@ function out = Enhancement3(img)
     out = medfilt2(out, [3 3]);
     out = EdgeConEnhance(out);
     out = EdgeConEnhance(out);
-
+    
+    %new stuff
+    out = medfilt2(out, [5 5]);
+    out = UnsharpMask(out);
+    out = medfilt2(out, [3 3]);
+    out = UnsharpMask(out);
+    
+    %/new stff
     out = EdgeConEnhance(out);
     out = EdgeConEnhance(out);
     
@@ -124,6 +131,39 @@ function out = Enhancement3(img)
     disp("--Applying equalization...")
 end
 
+function out = Enhancement4(img)
+
+    disp("--Applying Blur...")
+    %out = MeanBlur(img, "valid");
+    out = medfilt2(img, [3 3]);
+    out = MeanBlur(out, "valid");
+    out = UnsharpMask(out);
+    %out = UnsharpMask(out);
+    out = medfilt2(out, [5 5]);
+    %out = EdgeConEnhance(out);
+    out = UnsharpMask(out);
+    out = medfilt2(out, [5 5]);
+
+    out = EdgeConEnhance(out);
+    out = medfilt2(out, [3 3]);
+    out = EdgeConEnhance(out);
+    out = EdgeConEnhance(out);
+    
+    %new stuff
+    out = medfilt2(out, [5 5]);
+    out = UnsharpMask(out);
+    out = medfilt2(out, [3 3]);
+    out = UnsharpMask(out);
+    
+    %/new stff
+    out = EdgeConEnhance(out);
+    out = EdgeConEnhance(out);
+    
+    out = UnsharpMask(out);
+    %out = UnsharpMask(out);
+    disp("--Applying equalization...")
+
+end
 
 function out = MeanBlur(img, method)
 
@@ -172,8 +212,9 @@ function out = GetBinaryMask(img)
        img = rgb2gray(img);
     end
 
+    %bmask = ~imbinarize(img, 0.8);
     bmask = ~imbinarize(img);
-
+    
     %imfill
     disp("--Filling in the Holes...")
     CONN = [ 0 1 0; 1 1 1; 0 1 0 ];
@@ -209,12 +250,10 @@ function out = GrowRegion(bmask, dir)
     out = bmask;
     
     %opening
-    for n = 1:loops
-        disp("--Erroding the Image")
-        out = imerode(out, se);
-        disp("--Dilating the Image")
-        out = imdilate(out, se);
-    end
+    disp("--Erroding the Image")
+    out = imerode(out, se);
+    disp("--Dilating the Image")
+    out = imdilate(out, se);
     
 end
 
@@ -225,23 +264,16 @@ function out = ApplyMorphology(bmask, loops)
     out = bmask;
     
     for n = 1:loops
-        disp("--Erroding the Image")
-        out = imerode(out, se);
-        disp("--Dilating the Image")
-        out = imdilate(out, se);
+        out = GrowRegion(bmask, "centre");
     end
     
     disp("--Erroding the Image")
     out = imerode(out, se);
-    
+    disp("--Removing isolated")
     out = RemoveIsolated(out);
     
     for n = 1:loops
-        disp("--Erroding the Image")
-        out = imerode(out, se);
-
-        disp("--Dilating the Image")
-        out = imdilate(out, se);
+        out = GrowRegion(out, "centre");
     end
     
     disp("--Erroding the Image")
@@ -252,23 +284,11 @@ function out = ApplyMorphology(bmask, loops)
 end
 
 function out = ApplyMorphology2(bmask, loops)
-    se = [0,1,0; 1,1,1; 0,1,0];
-    out = bmask;
     
     %opening
     for n = 1:loops
-        disp("--Erroding the Image")
-        out = imerode(out, se);
-        disp("--Dilating the Image")
-        out = imdilate(out, se);
+        out = GrowRegion(bmask, "centre");
     end
-    
-    GrowRegion(bmask, "up")
-    
-    %disp("--Erroding the Image")
-    %out = imerode(out, se);
-    
-    %out = RemoveIsolated(out);
     
 end
 
@@ -311,39 +331,36 @@ end
 
 function regp = FilterRegionProps(labels)
 
-    regp = regionprops(labels, "centroid", "ConvexArea", "BoundingBox", "Solidity", "Area", "Perimeter", "Eccentricity");
+    regp = regionprops(labels, "centroid", "ConvexArea", "BoundingBox", "Solidity", "Area", "Perimeter", "Eccentricity", "Circularity");
     
     convexArea = cat(1, regp.ConvexArea);
     solidity = cat(1, regp.Solidity);
     area = cat(1, regp.Area);
     perimeter = cat(1, regp.Perimeter);
     ecentricity = cat(1, regp.Eccentricity);
+    circularity = cat(1, regp.Circularity);
     
     aprat_arr = zeros(6);
     ecentricity_arr = zeros(6);
+    circularity_arr = zeros(6);
     
     deleted = 0;
     for n = 1:size(convexArea)
         aprat = area(n) / perimeter(n);
-        disp(aprat)
-        if convexArea(n) < 1300
-            %delete the record from s
+        if convexArea(n) < 1100 
             regp(n-deleted) = [];
             deleted = deleted + 1;
-        elseif solidity(n) > 0.6
+        elseif solidity(n) > 0.7 
             regp(n-deleted) = [];
             deleted = deleted + 1;
-        elseif aprat < 4 || aprat > 7
+        elseif aprat < 4 || aprat > 6
             regp(n-deleted) = [];
             deleted = deleted + 1;
-        else
-            aprat_arr(n-deleted) = aprat;
-            ecentricity_arr(n-deleted) = ecentricity(n-deleted);
+        elseif circularity(n) > 0.4
+            regp(n-deleted) = [];
+            deleted = deleted + 1;    
+
         end
-    end
-    
-    for n = 1:size(aprat_arr)
-        disp(aprat_arr(n))
     end
 
 end
