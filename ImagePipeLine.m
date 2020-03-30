@@ -8,8 +8,8 @@ function ImagePipeLine(name)
     sgtitle("Image Pipe Line")
     
     %loading in the image
-    img = imread(name);
-    img = img(:,:,3);
+    orig_img = imread(name);
+    img = orig_img(:,:,3);
     subplot(4,3,1)
     imshow(img)
     title("Initial Image")
@@ -18,10 +18,15 @@ function ImagePipeLine(name)
     out = ImageProcessing(img);
     
     %%% Image Analysis %%%      
-    ImageAnalysis(out);
-    
-    x = (5);
+    regprops = ImageAnalysis(out);
+    [x,~] = size(regprops);
     fprintf("There are %6.2f starfish. \n",x);
+    
+    %%% Image Detection %%%
+    subplot(4,3,[7,8,9,10])
+    imshow(orig_img)
+    DisplayBounding(regprops)
+    
     
 end
 
@@ -62,9 +67,10 @@ function out = ImageAnalysis(mask)
     disp("Getting Shape Descriptors")
     regp = FilterRegionProps(labels);
     
-    subplot(4,3,[7,8,9,10])
+    subplot(4,3,6)
     DisplayCentroids(regp, out);
     DisplayBounding(regp)
+    out = regp;
     
 end
 
